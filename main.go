@@ -1,19 +1,23 @@
 package main
 
 import (
-	// "encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
-
-	// "io"
-	// "net/http"
+	"sync"
 
 	"go-stack-app/questions"
 	"go-stack-app/settings"
 )
+var wg = sync.WaitGroup{}
 	
+func sendQuestionToQueue(question questions.Item) {
+	//This is mock
+	fmt.Printf("Sending %v to queue...\n", question.Title)
+	wg.Done()
+}
+
 
 
 func main() {
@@ -31,8 +35,11 @@ func main() {
 	result, err := questionsClient.GetQuestions(settings, page, fromDate)
 
 	if err != nil {
-		log.Println("Api nie działa")
+		log.Println("There is so problem with stackoverflow API")
 	}
-	fmt.Println(result)
-	fmt.Println(result.GetLatesDate())
+	for _, item := range result.Items {
+		wg.Add(1)
+		go sendQuestionToQueue(item)
+	}
+	wg.Wait()
 }
