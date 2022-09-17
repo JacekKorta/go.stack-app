@@ -43,39 +43,51 @@ func (q *QuestionsSearchOut) GetLatesDate() int {
 
 type Client struct {
 	http *http.Client
-	page int
-	tagged string
 }
 
 func (c *Client) GetQuestions(settings *settings.Settings, page int, fromDate int) (*QuestionsSearchOut, error) {
-	t := time.Now().AddDate(0, -1, 0)
-	max := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).Unix() //today in unix
+	t := time.Now()
+	today := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+
+	if fromDate == 0 {
+		// fromDate = int(today.Unix())
+		fromDate = int(today.AddDate(0, -1, 0).Unix())
+	}
+
 	endpoint := fmt.Sprintf(
-		"%s/2.3/questions?page=%d&fromdate=%dorder=desc&max=%d&sort=activity&tagged=%s&site=stackoverflow&filter=%s", 
+		"%s/2.3/questions?page=%d&fromdate=%d&order=desc&sort=activity&tagged=%s&site=stackoverflow&filter=%s", 
 		settings.AppUrl,
 		page,
 		fromDate,
-		max,
 		settings.Tagged,
 		settings.Filter,
 	)
+	
 
 	log.Println("Making request to: ", endpoint)
 	resp, err := c.http.Get(endpoint)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
+	log.Println(resp)
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
+		log.Println(resp.StatusCode)
 		return nil, fmt.Errorf(string(body))
 	}
 
 	res := &QuestionsSearchOut{}
 	return res, json.Unmarshal(body, res)
+}
+
+func NewClient(httpClient *http.Client) *Client {
+	return &Client{httpClient}
 }

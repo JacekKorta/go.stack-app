@@ -1,10 +1,14 @@
 package main
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
-	"io"
+	"log"
 	"net/http"
+	"time"
+
+	// "io"
+	// "net/http"
 
 	"go-stack-app/questions"
 	"go-stack-app/settings"
@@ -18,31 +22,17 @@ func main() {
 
 	settings.GetSettings()
 
-	base_url := settings.AppUrl
+	myClient := &http.Client{Timeout: 10 * time.Second}
+	
+	page := 1
+	fromDate := 0
 
-	url := "https://api.stackexchange.com/2.3/questions?page=2&pagesize=1&order=desc&max=1663286400&sort=activity&tagged=python&site=stackoverflow&filter=!)rtsWHVtIIZq9Fi.wGEU"
-
-	res := &questions.QuestionsSearchOut{}
-
-	resp, err := http.Get(url)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-
-	if resp.StatusCode != http.StatusOK {
-		fmt.Println(string(body))
-	}
-
-	fmt.Println(string(body))
-	// res := &ResponseJson{}
-
-	err = json.Unmarshal(body, res)
+	questionsClient := questions.NewClient(myClient)
+	result, err := questionsClient.GetQuestions(settings, page, fromDate)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println("Api nie działa")
 	}
-	fmt.Println(res.Items)
-	fmt.Println(base_url)
+	fmt.Println(result)
+	fmt.Println(result.GetLatesDate())
 }
