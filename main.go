@@ -30,16 +30,22 @@ func main() {
 	
 	page := 1
 	fromDate := 0
+	hasMore := true
 
-	questionsClient := questions.NewClient(myClient)
-	result, err := questionsClient.GetQuestions(settings, page, fromDate)
+	for hasMore {
+		questionsClient := questions.NewClient(myClient)
+		result, err := questionsClient.GetQuestions(settings, page, fromDate)
 
-	if err != nil {
-		log.Println("There is so problem with stackoverflow API")
+		if err != nil {
+			log.Println("There is so problem with stackoverflow API")
+		}
+		for _, item := range result.Items {
+			wg.Add(1)
+			go sendQuestionToQueue(item)
+		}
+		hasMore = result.HasMore
+		page++
 	}
-	for _, item := range result.Items {
-		wg.Add(1)
-		go sendQuestionToQueue(item)
-	}
+
 	wg.Wait()
 }

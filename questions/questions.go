@@ -63,12 +63,12 @@ func (c *Client) GetQuestions(settings *settings.Settings, page int, fromDate in
 		settings.Filter,
 	)
 	
-
+	res := &QuestionsSearchOut{}
 	log.Println("Making request to: ", endpoint)
 	resp, err := c.http.Get(endpoint)
 	if err != nil {
 		log.Println(err)
-		return nil, err
+		return res, err
 	}
 	defer resp.Body.Close()
 	log.Println(resp)
@@ -76,15 +76,15 @@ func (c *Client) GetQuestions(settings *settings.Settings, page int, fromDate in
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Println(err)
-		return nil, err
+		return res, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		log.Println(resp.StatusCode)
-		return nil, fmt.Errorf(string(body))
+		log.Println(string(body))
+		return res, fmt.Errorf(string(body))
 	}
 
-	res := &QuestionsSearchOut{}
 	return res, json.Unmarshal(body, res)
 }
 
