@@ -25,8 +25,8 @@ func (s *Settings) GetSettings() *Settings {
 	s.AppUrl = os.Getenv("APP_URL")
 	s.Filter = os.Getenv("FILTER")
 	s.Tagged = os.Getenv("TAGGED")
-	s.RequestLimit = s.StrToIntParseOrGetDefault("REQEST_LIMIT_PER_SEC", 50)
-	s.CheckDelay = s.StrToIntParseOrGetDefault("DELAY_BETWEEN_CHECKS", 5)
+	s.RequestLimit = s.StrToIntParseOrGetDefault("REQEST_LIMIT_PER_SEC", 10)
+	s.CheckDelay = s.StrToIntParseOrGetDefault("DELAY_BETWEEN_CHECKS", 5) //minutes
 	
 	return s
 
