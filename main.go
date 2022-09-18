@@ -37,7 +37,7 @@ func main() {
 	for {
 		for hasMore {
 			if errorsCount > 2 {
-				log.Println("There is some constant problem with API. Closing program...")
+				log.Println("There is some constant problem with API. Breaking current loop...")
 				//Todo: change to sleep for a while, and remove break
 				break
 			}
