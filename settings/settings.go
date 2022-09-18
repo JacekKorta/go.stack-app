@@ -13,6 +13,7 @@ type Settings struct {
 	Filter string
 	Tagged string
 	RequestLimit int
+	CheckDelay int
 }
 
 func (s *Settings) GetSettings() *Settings {
@@ -24,12 +25,21 @@ func (s *Settings) GetSettings() *Settings {
 	s.AppUrl = os.Getenv("APP_URL")
 	s.Filter = os.Getenv("FILTER")
 	s.Tagged = os.Getenv("TAGGED")
-	requestLimitStr := os.Getenv("REQEST_LIMIT_PER_SEC")
-	intVar, err := strconv.Atoi(requestLimitStr)
+
+	strRequestLimit := os.Getenv("REQEST_LIMIT_PER_SEC")
+	intRequestLimit, err := strconv.Atoi(strRequestLimit)
 	if err != nil {
-		s.RequestLimit = 0
+		s.RequestLimit = 50
 	} else {
-		s.RequestLimit = intVar
+		s.RequestLimit = intRequestLimit
+	}
+
+	strDelay := os.Getenv("DELAY_BETWEEN_CHECKS")
+	intDelay, err := strconv.Atoi(strDelay)
+	if err != nil {
+		s.CheckDelay = 5
+	} else {
+		s.CheckDelay = intDelay
 	}
 	
 	return s
