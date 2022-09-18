@@ -71,7 +71,6 @@ func (c *Client) GetQuestions(settings *settings.Settings, page int, fromDate in
 		return res, err
 	}
 	defer resp.Body.Close()
-	log.Println(resp)
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -80,8 +79,8 @@ func (c *Client) GetQuestions(settings *settings.Settings, page int, fromDate in
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Println(resp.StatusCode)
-		log.Println(string(body))
+		log.Println("Status code: ", resp.StatusCode)
+		log.Println("Response: ", string(body))
 		return res, fmt.Errorf(string(body))
 	}
 

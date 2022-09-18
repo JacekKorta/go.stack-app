@@ -53,7 +53,7 @@ func main() {
 		}
 		hasMore = result.HasMore
 		page++
-
+		time.Sleep(time.Duration(settings.GetMilisecondRateLimit()) * time.Millisecond)
 	}
 
 	wg.Wait()
