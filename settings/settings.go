@@ -20,27 +20,13 @@ func (s *Settings) GetSettings() *Settings {
 	err := godotenv.Load()
 
 	if err != nil {
-		log.Println("Error loading .env file")
+		log.Fatal("Error loading .env file")
 	}
 	s.AppUrl = os.Getenv("APP_URL")
 	s.Filter = os.Getenv("FILTER")
 	s.Tagged = os.Getenv("TAGGED")
-
-	strRequestLimit := os.Getenv("REQEST_LIMIT_PER_SEC")
-	intRequestLimit, err := strconv.Atoi(strRequestLimit)
-	if err != nil {
-		s.RequestLimit = 50
-	} else {
-		s.RequestLimit = intRequestLimit
-	}
-
-	strDelay := os.Getenv("DELAY_BETWEEN_CHECKS")
-	intDelay, err := strconv.Atoi(strDelay)
-	if err != nil {
-		s.CheckDelay = 5
-	} else {
-		s.CheckDelay = intDelay
-	}
+	s.RequestLimit = s.StrToIntParseOrGetDefault("REQEST_LIMIT_PER_SEC", 50)
+	s.CheckDelay = s.StrToIntParseOrGetDefault("DELAY_BETWEEN_CHECKS", 5)
 	
 	return s
 
@@ -50,4 +36,19 @@ func (s *Settings) GetMilisecondRateLimit() int {
 	rest := 1000 % s.RequestLimit
 	base := 1000 - rest
 	return base / s.RequestLimit
+}
+
+func (s *Settings) StrToIntParseOrGetDefault(envName string, defaultValue int) int {
+	// Method parse env variable to int. If its not posible or env is not set it returns default int value
+	strValue := os.Getenv(envName)
+	if strValue == "" {
+		log.Println("Variable is empty. Using default.")
+		return defaultValue
+	}
+	intValue, err := strconv.Atoi(strValue)
+	if err != nil {
+		log.Println("Can't use variable. Using default.")
+		return defaultValue
+	} 
+	return intValue
 }
