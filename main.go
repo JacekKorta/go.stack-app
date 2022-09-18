@@ -15,7 +15,7 @@ var wg = sync.WaitGroup{}
 
 func sendQuestionToQueue(question questions.Item) {
 	//This is mock
-	fmt.Printf("Sending %v to queue...\n", question.Title)
+	fmt.Printf("Sending question with id: %v to queue...\n", question.QuestionID)
 	wg.Done()
 }
 
@@ -31,6 +31,7 @@ func main() {
 	fromDate := 0
 	hasMore := true
 	errorsCount := 0
+	maxErrorCount := 2
 	delay := settings.GetMilisecondRateLimit()
 	var newFromDate int = 0
 
@@ -45,7 +46,10 @@ func main() {
 			result, err := questionsClient.GetQuestions(settings, page, fromDate)
 
 			if err != nil {
-				log.Println("There is so problem with stackoverflow API")
+				log.Printf(
+					"There is so problem with stackoverflow API. Error count: %v/%v\n", errorsCount, maxErrorCount,
+				)
+
 				errorsCount++
 				continue
 			}
@@ -66,6 +70,7 @@ func main() {
 		wg.Wait()
 		log.Println("Done. sleep for 5 minutes")
 		fromDate = newFromDate
+		log.Println("New 'fromDate' is now: ", fromDate)
 		time.Sleep(5 * time.Minute)
 	}
 }
