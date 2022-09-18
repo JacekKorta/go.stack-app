@@ -41,6 +41,12 @@ func (q *QuestionsSearchOut) GetLatesDate() int {
 	return latestDate
 }
 
+type QuestionErrorResponse struct {
+	ErrorID      int    `json:"error_id"`
+	ErrorMessage string `json:"error_message"`
+	ErrorName    string `json:"error_name"`
+}
+
 type Client struct {
 	http *http.Client
 }
