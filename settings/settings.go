@@ -20,7 +20,7 @@ func (s *Settings) GetSettings() *Settings {
 	err := godotenv.Load()
 
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Error loading .env file")
 	}
 	s.AppUrl = os.Getenv("APP_URL")
 	s.Filter = os.Getenv("FILTER")
