@@ -6,12 +6,52 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	"context"
 
 	"go-stack-app/questions"
 	"go-stack-app/settings"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+
+
+func failOnError(err error, msg string) {
+if err != nil {
+  log.Panicf("%s: %s", msg, err)
+}
+}
 var wg = sync.WaitGroup{}
+
+func permanentPublish(goCh <- chan string) {
+
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/mtg")
+	failOnError(err, "Failed to connect to RabbitMQ")
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	failOnError(err, "Failed to open a channel")
+	defer ch.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	for {
+		body := <- goCh
+		err = ch.PublishWithContext(ctx,
+		"stack.questions.raw",     // exchange
+		"stack.questions.duplicated", // routing key
+		false,  // mandatory
+		false,  // immediate
+		amqp.Publishing {
+			ContentType: "text/plain",
+			Body:        []byte(body),
+		})
+		failOnError(err, "Failed to publish a message")
+		log.Printf(" [x] Sent %s\n", body)
+	}
+}
+
+
 
 func sendQuestionToQueue(question questions.Item) {
 	//This is mock
@@ -34,6 +74,10 @@ func main() {
 	maxErrorCount := 2
 	delay := settings.GetMilisecondRateLimit()
 	var newFromDate int = 0
+	ch := make(chan string)
+
+	wg.Add(1)
+	go permanentPublish(ch)
 
 	for {
 		for hasMore {
@@ -55,8 +99,9 @@ func main() {
 			}
 			errorsCount = 0
 			for _, item := range result.Items {
-				wg.Add(1)
-				go sendQuestionToQueue(item)
+				func ()  {
+					ch <- item.Title
+				}()
 			}
 			hasMore = result.HasMore
 			page++
