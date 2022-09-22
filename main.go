@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -22,42 +21,21 @@ if err != nil {
 }
 var wg = sync.WaitGroup{}
 
-func permanentPublish(goCh <- chan string) {
-
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/mtg")
-	failOnError(err, "Failed to connect to RabbitMQ")
-	defer conn.Close()
-
-	ch, err := conn.Channel()
-	failOnError(err, "Failed to open a channel")
-	defer ch.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	for {
-		body := <- goCh
-		err = ch.PublishWithContext(ctx,
-		"stack.questions.raw",     // exchange
-		"stack.questions.duplicated", // routing key
-		false,  // mandatory
-		false,  // immediate
-		amqp.Publishing {
-			ContentType: "text/plain",
-			Body:        []byte(body),
-		})
-		failOnError(err, "Failed to publish a message")
-		log.Printf(" [x] Sent %s\n", body)
-	}
-}
-
-
-
-func sendQuestionToQueue(question questions.Item) {
-	//This is mock
-	fmt.Printf("Sending question with id: %v to queue...\n", question.QuestionID)
+func publishMessage(ctx context.Context, body string, ch *amqp.Channel) {
+	err := ch.PublishWithContext(ctx,
+	"stack.questions.raw",     // exchange
+	"stack.questions.duplicated", // routing key
+	false,  // mandatory
+	false,  // immediate
+	amqp.Publishing {
+		ContentType: "text/plain",
+		Body:        []byte(body),
+	})
+	failOnError(err, "Failed to publish a message")
+	log.Printf(" [x] Sent %s\n", body)
 	wg.Done()
 }
+
 
 func main() {
 
@@ -74,10 +52,17 @@ func main() {
 	maxErrorCount := 2
 	delay := settings.GetMilisecondRateLimit()
 	var newFromDate int = 0
-	ch := make(chan string)
 
-	wg.Add(1)
-	go permanentPublish(ch)
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/mtg")
+	failOnError(err, "Failed to connect to RabbitMQ")
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	failOnError(err, "Failed to open a channel")
+	defer ch.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
 	for {
 		for hasMore {
@@ -99,9 +84,8 @@ func main() {
 			}
 			errorsCount = 0
 			for _, item := range result.Items {
-				func ()  {
-					ch <- item.Title
-				}()
+				wg.Add(1)
+				go publishMessage(ctx, item.Title, ch)
 			}
 			hasMore = result.HasMore
 			page++
@@ -111,11 +95,16 @@ func main() {
 			if newFromDate < result.GetLatesDate() {
 				newFromDate = result.GetLatesDate()
 			}
+			wg.Wait()
 		}
-		wg.Wait()
+		
 		log.Println("Done. sleep for 5 minutes")
 		fromDate = newFromDate
 		log.Println("New 'fromDate' is now: ", fromDate)
 		time.Sleep(5 * time.Minute)
+		errorsCount = 0
+		page = 1
+		hasMore = true
+
 	}
 }
