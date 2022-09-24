@@ -70,7 +70,7 @@ func (c *Client) GetQuestions(settings *settings.Settings, page int, fromDate in
 	)
 	
 	res := &QuestionsSearchOut{}
-	log.Println("Making request to: ", endpoint)
+	log.Printf("Making request to: %v\n", endpoint)
 	resp, err := c.http.Get(endpoint)
 	if err != nil {
 		log.Println(err)
@@ -85,8 +85,8 @@ func (c *Client) GetQuestions(settings *settings.Settings, page int, fromDate in
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Println("Status code: ", resp.StatusCode)
-		log.Println("Response: ", string(body))
+		log.Printf("Status code: %v\n", resp.StatusCode)
+		log.Printf("Response: %v\n", string(body))
 		return res, fmt.Errorf(string(body))
 	}
 
