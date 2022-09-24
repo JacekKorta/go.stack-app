@@ -56,8 +56,13 @@ func main() {
 	delay := settings.GetMilisecondRateLimit()
 	var newFromDate int = 0
 
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/mtg")
+	conn, err := amqp.Dial(settings.GetRabbitmqUrl("mtg"))
 	failOnError(err, "Failed to connect to RabbitMQ")
+	// if err != nil {
+	// 	log.Println("Reconecting...............")
+	// 	time.Sleep(1* time.Minute)
+	// 	conn, err = amqp.Dial(settings.GetRabbitmqUrl("mtg"))
+	// }
 	defer conn.Close()
 
 	ch, err := conn.Channel()
