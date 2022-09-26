@@ -58,11 +58,6 @@ func main() {
 
 	conn, err := amqp.Dial(settings.GetRabbitmqUrl("mtg"))
 	failOnError(err, "Failed to connect to RabbitMQ")
-	// if err != nil {
-	// 	log.Println("Reconecting...............")
-	// 	time.Sleep(1* time.Minute)
-	// 	conn, err = amqp.Dial(settings.GetRabbitmqUrl("mtg"))
-	// }
 	defer conn.Close()
 
 	ch, err := conn.Channel()
