@@ -15,10 +15,10 @@ type Settings struct {
 	Tagged string
 	RequestLimit int
 	CheckDelay int
-	Rabbit RabbitmQSettings
+	Rabbit RabbitMQSettings
 }
 
-type RabbitmQSettings struct {
+type RabbitMQSettings struct {
 	User string
 	Password string
 	Host string
@@ -45,7 +45,7 @@ func (s *Settings) GetSettings() *Settings {
 
 }
 func (s *Settings) GetRabbitmqUrl(vhost string) string {
-	url := fmt.Sprintf("amqp://%s:%s@%s:%d/%s",
+	url := fmt.Sprintf("amqp://%s:%s@%s:%d%s",
 	s.Rabbit.User,
 	s.Rabbit.Password,
 	s.Rabbit.Host,
