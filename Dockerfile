@@ -14,7 +14,6 @@ RUN go build -o /stack-app-bin
 
 FROM alpine:latest
 
-WORKDIR /app
 COPY --from=build /stack-app-bin /stack-app-bin
 
 ENTRYPOINT [ "/stack-app-bin" ]
