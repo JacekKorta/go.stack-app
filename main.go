@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"sync"
 	"time"
 
 	"go-stack-app/questions"
@@ -21,7 +20,6 @@ if err != nil {
   log.Panicf("%s: %s", msg, err)
 }
 }
-var wg = sync.WaitGroup{}
 
 func publishMessage(ctx context.Context, body string, ch *amqp.Channel, mark int) {
 	err := ch.PublishWithContext(ctx,
@@ -35,7 +33,6 @@ func publishMessage(ctx context.Context, body string, ch *amqp.Channel, mark int
 	})
 	failOnError(err, "Failed to publish a message")
 	log.Printf(" [x] Sent question with id: %v\n", mark)
-	wg.Done()
 }
 
 
@@ -47,7 +44,7 @@ func main() {
 
 	myClient := &http.Client{Timeout: 10 * time.Second}
 
-	page := 1
+	page := 20
 	fromDate := 0
 	hasMore := true
 	errorsCount := 0
@@ -89,7 +86,6 @@ func main() {
 			for _, item := range result.Items {
 				body, err := json.Marshal(item)
 				failOnError(err, "Unable to marshal item")	
-				wg.Add(1)
 				go publishMessage(ctx, string(body), ch, item.QuestionID)
 			}
 			hasMore = result.HasMore
@@ -100,7 +96,6 @@ func main() {
 			if newFromDate < result.GetLatesDate() {
 				newFromDate = result.GetLatesDate()
 			}
-			wg.Wait()
 		}
 		
 		log.Printf("Done. sleep for %d minutes\n", sleepAfterGrab)
