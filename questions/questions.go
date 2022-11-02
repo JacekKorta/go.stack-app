@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-//https://api.stackexchange.com/2.3/questions?page=2&pagesize=1&order=desc&max=1663286400&sort=activity&tagged=python&site=stackoverflow&filter=!0WJ3YL2.EQ8B_wPSrO73X35Fv
 type QuestionsSearchOut struct {
 		Items []Item `json:"items"`
 		HasMore        bool `json:"has_more"`
@@ -56,7 +55,6 @@ func (c *Client) GetQuestions(settings *settings.Settings, page int, fromDate in
 	today := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 
 	if fromDate == 0 {
-		// fromDate = int(today.Unix())
 		fromDate = int(today.AddDate(0, -1, 0).Unix())
 	}
 

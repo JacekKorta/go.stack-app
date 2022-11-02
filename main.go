@@ -9,31 +9,12 @@ import (
 
 	"go-stack-app/questions"
 	"go-stack-app/settings"
+	"go-stack-app/messages"
+	"go-stack-app/utils"
+
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
-
-
-
-func failOnError(err error, msg string) {
-if err != nil {
-  log.Panicf("%s: %s", msg, err)
-}
-}
-
-func publishMessage(ctx context.Context, body string, ch *amqp.Channel, mark int) {
-	err := ch.PublishWithContext(ctx,
-	"stack.questions.raw",     // exchange
-	"stack.questions.duplicated", // routing key
-	false,  // mandatory
-	false,  // immediate
-	amqp.Publishing {
-		ContentType: "text/plain",
-		Body:        []byte(body),
-	})
-	failOnError(err, "Failed to publish a message")
-	log.Printf(" [x] Sent question with id: %v\n", mark)
-}
 
 
 func main() {
@@ -54,11 +35,11 @@ func main() {
 	var newFromDate int = 0
 
 	conn, err := amqp.Dial(settings.GetRabbitmqUrl("/mtg"))
-	failOnError(err, "Failed to connect to RabbitMQ")
+	utils.FailOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
 	ch, err := conn.Channel()
-	failOnError(err, "Failed to open a channel")
+	utils.FailOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -85,8 +66,8 @@ func main() {
 			errorsCount = 0
 			for _, item := range result.Items {
 				body, err := json.Marshal(item)
-				failOnError(err, "Unable to marshal item")	
-				go publishMessage(ctx, string(body), ch, item.QuestionID)
+				utils.FailOnError(err, "Unable to marshal item")	
+				go messages.PublishMessage(ctx, string(body), ch, item.QuestionID)
 			}
 			hasMore = result.HasMore
 			page++
