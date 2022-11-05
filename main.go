@@ -12,8 +12,6 @@ import (
 	"go-stack-app/messages"
 	"go-stack-app/utils"
 
-
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 
@@ -25,17 +23,16 @@ func main() {
 
 	myClient := &http.Client{Timeout: 10 * time.Second}
 
-	page := 20
+	page := 1
 	fromDate := 0
 	hasMore := true
 	errorsCount := 0
 	maxErrorCount := 2
-	sleepAfterGrab := 2
+	sleepAfterGrab := settings.CheckDelay
 	delay := settings.GetMilisecondRateLimit()
 	var newFromDate int = 0
 
-	conn, err := amqp.Dial(settings.GetRabbitmqUrl("/mtg"))
-	utils.FailOnError(err, "Failed to connect to RabbitMQ")
+	conn := messages.GetConnection(settings.GetRabbitmqUrl("/mtg"))
 	defer conn.Close()
 
 	ch, err := conn.Channel()
@@ -49,7 +46,7 @@ func main() {
 		for hasMore {
 			if errorsCount > 2 {
 				log.Println("There is some constant problem with API. Breaking current loop...")
-				//Todo: change to sleep for a while, and remove break
+				//Todo: change to sleep for a while, and remove break?
 				break
 			}
 			questionsClient := questions.NewClient(myClient)
